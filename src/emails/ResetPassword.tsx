@@ -1,119 +1,20 @@
-import React from "react";
-
-interface ResetPasswordProps {
-  name: string;
-  resetLink: string;
-}
-
-export function ResetPassword({ name, resetLink }: ResetPasswordProps) {
-  return (
-    <div style={containerStyle}>
-      <div style={cardStyle}>
-        <h1 style={logoStyle}>SecureGate</h1>
-        <h2 style={titleStyle}>Reset Your Password</h2>
-        <p style={textStyle}>Hello {name || "there"},</p>
-        <p style={textStyle}>
-          We received a request to reset the password associated with your SecureGate account. To select a new password and log back in, please click the button below:
-        </p>
-        
-        <div style={buttonContainerStyle}>
-          <a href={resetLink} target="_blank" rel="noopener noreferrer" style={buttonStyle}>
-            Reset Password
-          </a>
-        </div>
-
-        <p style={warningTextStyle}>
-          <strong>Security Notice:</strong> This password reset link will expire in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email; your password will remain unchanged.
-        </p>
-
-        <hr style={dividerStyle} />
-        
-        <p style={footerTextStyle}>
-          This is an automated security transmission from SecureGate. Please do not reply directly to this message.
-        </p>
-      </div>
+export function renderResetPasswordHtml(name: string, resetLink: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="background-color:#F9FAFB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;padding:40px 20px;min-height:100%;margin:0;">
+  <div style="background-color:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;margin:0 auto;max-width:500px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+    <h1 style="color:#2563EB;font-size:22px;font-weight:bold;margin:0 0 24px 0;text-align:center;letter-spacing:-0.025em;">SecureGate</h1>
+    <h2 style="color:#111827;font-size:20px;font-weight:600;margin:0 0 16px 0;">Reset Your Password</h2>
+    <p style="color:#4B5563;font-size:14px;line-height:1.6;margin:0 0 16px 0;">Hello ${name || "there"},</p>
+    <p style="color:#4B5563;font-size:14px;line-height:1.6;margin:0 0 16px 0;">We received a request to reset the password associated with your SecureGate account. To select a new password and log back in, please click the button below:</p>
+    <div style="margin:24px 0;text-align:center;">
+      <a href="${resetLink}" target="_blank" rel="noopener noreferrer" style="background-color:#2563EB;border-radius:8px;color:#FFFFFF;display:inline-block;font-size:14px;font-weight:500;padding:12px 24px;text-decoration:none;">Reset Password</a>
     </div>
-  );
+    <p style="color:#B45309;background-color:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;font-size:13px;line-height:1.5;margin:24px 0 0 0;padding:12px 16px;"><strong>Security Notice:</strong> This password reset link will expire in <strong>1 hour</strong>. If you did not request a password reset, you can safely ignore this email; your password will remain unchanged.</p>
+    <hr style="border:none;border-top:1px solid #E5E7EB;margin:32px 0 16px 0;" />
+    <p style="color:#9CA3AF;font-size:12px;line-height:1.5;margin:0;text-align:center;">This is an automated security transmission from SecureGate. Please do not reply directly to this message.</p>
+  </div>
+</body>
+</html>`;
 }
-
-// Inline styles for high compatibility across diverse email clients
-const containerStyle: React.CSSProperties = {
-  backgroundColor: "#F9FAFB",
-  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-  padding: "40px 20px",
-  minHeight: "100%",
-};
-
-const cardStyle: React.CSSProperties = {
-  backgroundColor: "#FFFFFF",
-  border: "1px solid #E5E7EB",
-  borderRadius: "12px",
-  margin: "0 auto",
-  maxWidth: "500px",
-  padding: "32px",
-  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-};
-
-const logoStyle: React.CSSProperties = {
-  color: "#2563EB",
-  fontSize: "22px",
-  fontWeight: "bold",
-  margin: "0 0 24px 0",
-  textAlign: "center",
-  letterSpacing: "-0.025em",
-};
-
-const titleStyle: React.CSSProperties = {
-  color: "#2563EB",
-  fontSize: "20px",
-  fontWeight: 600,
-  margin: "0 0 16px 0",
-};
-
-const textStyle: React.CSSProperties = {
-  color: "#4B5563",
-  fontSize: "14px",
-  lineHeight: "1.6",
-  margin: "0 0 16px 0",
-};
-
-const buttonContainerStyle: React.CSSProperties = {
-  margin: "24px 0",
-  textAlign: "center",
-};
-
-const buttonStyle: React.CSSProperties = {
-  backgroundColor: "#2563EB",
-  borderRadius: "8px",
-  color: "#FFFFFF",
-  display: "inline-block",
-  fontSize: "14px",
-  fontWeight: "500",
-  padding: "12px 24px",
-  textDecoration: "none",
-};
-
-const warningTextStyle: React.CSSProperties = {
-  color: "#B45309",
-  backgroundColor: "#FFFBEB",
-  border: "1px solid #FDE68A",
-  borderRadius: "8px",
-  fontSize: "13px",
-  lineHeight: "1.5",
-  margin: "24px 0 0 0",
-  padding: "12px 16px",
-};
-
-const dividerStyle: React.CSSProperties = {
-  border: "none",
-  borderTop: "1px solid #E5E7EB",
-  margin: "32px 0 16px 0",
-};
-
-const footerTextStyle: React.CSSProperties = {
-  color: "#9CA3AF",
-  fontSize: "12px",
-  lineHeight: "1.5",
-  margin: 0,
-  textAlign: "center",
-};

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { verifyUserEmail } from "@/server/services/user.service";
 
+export const dynamic = "force-dynamic";
+
 interface VerifyEmailProps {
   params: {
     token: string;
