@@ -58,7 +58,7 @@ export default async function Home() {
         
         <h1 className="text-4xl sm:text-6xl font-extrabold text-gray-900 tracking-tight leading-none mb-6">
           Hardened Authentication for <br />
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400">
+          <span className="text-blue-600">
             Airtight Security.
           </span>
         </h1>

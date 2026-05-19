@@ -107,13 +107,13 @@ export default function ForgotPasswordPage() {
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p className="text-sm text-emerald-850 font-medium">{serverSuccess}</p>
+            <p className="text-sm text-emerald-800 font-medium">{serverSuccess}</p>
           </div>
         )}
 
         {/* Email Input */}
         <div className="space-y-1">
-          <label htmlFor="email" className="block text-sm font-semibold text-gray-750">
+          <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
             Email address
           </label>
           <input
@@ -122,13 +122,13 @@ export default function ForgotPasswordPage() {
             disabled={isLoading || !!serverSuccess}
             {...register("email")}
             className={`w-full px-3.5 py-2 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
-              errors.email ? "border-red-300 focus:ring-red-500" : "border-gray-355"
+              errors.email ? "border-red-300 focus:ring-red-500" : "border-gray-300"
             }`}
             placeholder="you@example.com"
             aria-describedby={errors.email ? "email-error" : undefined}
           />
           {errors.email && (
-            <p id="email-error" className="text-xs text-red-650 font-medium mt-1">
+            <p id="email-error" className="text-xs text-red-600 font-medium mt-1">
               {errors.email.message}
             </p>
           )}

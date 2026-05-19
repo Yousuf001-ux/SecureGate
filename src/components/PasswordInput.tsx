@@ -29,7 +29,7 @@ export function PasswordInput({
 
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="block text-sm font-semibold text-gray-750">
+      <label htmlFor={id} className="block text-sm font-semibold text-gray-700">
         {label}
       </label>
       <div className="relative">
@@ -39,7 +39,7 @@ export function PasswordInput({
           disabled={disabled}
           {...registration}
           className={`w-full px-3.5 py-2 pr-10 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
-            error ? "border-red-300 focus:ring-red-500" : "border-gray-355"
+            error ? "border-red-300 focus:ring-red-500" : "border-gray-300"
           }`}
           placeholder={placeholder}
           aria-describedby={error ? `${id}-error` : undefined}
@@ -69,7 +69,7 @@ export function PasswordInput({
       )}
 
       {error && (
-        <p id={`${id}-error`} className="text-xs text-red-650 font-medium mt-1">
+        <p id={`${id}-error`} className="text-xs text-red-600 font-medium mt-1">
           {error.message}
         </p>
       )}
