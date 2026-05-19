@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { signupSchema, type SignupInput } from "@/server/validators/auth.schema";
 import { AuthFormWrapper } from "@/components/AuthFormWrapper";
-import { PasswordStrengthIndicator } from "@/components/PasswordStrength";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -156,31 +156,15 @@ export default function SignupPage() {
         </div>
 
         {/* Password Input */}
-        <div className="space-y-1">
-          <label htmlFor="password" className="block text-sm font-semibold text-gray-750">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            disabled={isLoading || !!serverSuccess}
-            {...register("password")}
-            className={`w-full px-3.5 py-2 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
-              errors.password ? "border-red-300 focus:ring-red-500" : "border-gray-355"
-            }`}
-            placeholder="••••••••"
-            aria-describedby={errors.password ? "password-error" : undefined}
-          />
-          
-          {/* Dynamic Password Strength Indicator */}
-          <PasswordStrengthIndicator password={watchedPassword} />
-
-          {errors.password && (
-            <p id="password-error" className="text-xs text-red-650 font-medium mt-1">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
+        <PasswordInput
+          id="password"
+          label="Password"
+          registration={register("password")}
+          error={errors.password}
+          disabled={isLoading || !!serverSuccess}
+          showStrengthIndicator
+          watchedPassword={watchedPassword}
+        />
 
         {/* Submit Button */}
         <button

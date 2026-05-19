@@ -8,6 +8,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { loginSchema, type LoginInput } from "@/server/validators/auth.schema";
 import { AuthFormWrapper } from "@/components/AuthFormWrapper";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -127,27 +128,13 @@ export default function LoginPage() {
         </div>
 
         {/* Password Input */}
-        <div className="space-y-1">
-          <label htmlFor="password" className="block text-sm font-semibold text-gray-750">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            disabled={isLoading}
-            {...register("password")}
-            className={`w-full px-3.5 py-2 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
-              errors.password ? "border-red-300 focus:ring-red-500" : "border-gray-355"
-            }`}
-            placeholder="••••••••"
-            aria-describedby={errors.password ? "password-error" : undefined}
-          />
-          {errors.password && (
-            <p id="password-error" className="text-xs text-red-650 font-medium mt-1">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
+        <PasswordInput
+          id="password"
+          label="Password"
+          registration={register("password")}
+          error={errors.password}
+          disabled={isLoading}
+        />
 
         {/* Submit Button */}
         <button
