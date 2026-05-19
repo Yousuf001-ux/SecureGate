@@ -3,6 +3,8 @@ import { signupSchema } from "@/server/validators/auth.schema";
 import { registerUser } from "@/server/services/user.service";
 import { jsonSuccess, jsonError } from "@/lib/response";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Handles POST requests for user registration.
  * Validates request payload, hashes password in the service layer, stores user and verification token,

@@ -5,6 +5,8 @@ import { checkRateLimit } from "@/server/services/rateLimit.service";
 import { getClientIp } from "@/lib/getIp";
 import { jsonSuccess, jsonError } from "@/lib/response";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Handles POST requests for initiating a password reset.
  * Enforces strict sliding window IP rate limiting.

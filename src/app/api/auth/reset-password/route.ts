@@ -3,6 +3,8 @@ import { resetPasswordSchema } from "@/server/validators/auth.schema";
 import { resetPassword } from "@/server/services/user.service";
 import { jsonSuccess, jsonError } from "@/lib/response";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Handles POST requests for applying a new password via a reset token.
  * Validates token validity, enforces password complexity constraints via Zod,

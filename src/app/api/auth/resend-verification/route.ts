@@ -3,6 +3,8 @@ import { forgotPasswordSchema } from "@/server/validators/auth.schema";
 import { resendVerificationEmail } from "@/server/services/user.service";
 import { jsonSuccess, jsonError } from "@/lib/response";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Handles POST requests for resending the email verification token.
  * Validates request payload and triggers new token generation and email dispatch.
