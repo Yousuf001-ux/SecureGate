@@ -119,7 +119,7 @@ export default function SignupPage() {
             type="text"
             disabled={isLoading || !!serverSuccess}
             {...register("name")}
-            className={`w-full px-3.5 py-2 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
+            className={`w-full px-3.5 py-2 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
               errors.name ? "border-red-300 focus:ring-red-500" : "border-gray-355"
             }`}
             placeholder="John Doe"
@@ -142,7 +142,7 @@ export default function SignupPage() {
             type="email"
             disabled={isLoading || !!serverSuccess}
             {...register("email")}
-            className={`w-full px-3.5 py-2 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
+            className={`w-full px-3.5 py-2 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
               errors.email ? "border-red-300 focus:ring-red-500" : "border-gray-355"
             }`}
             placeholder="you@example.com"
@@ -165,7 +165,7 @@ export default function SignupPage() {
             type="password"
             disabled={isLoading || !!serverSuccess}
             {...register("password")}
-            className={`w-full px-3.5 py-2 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
+            className={`w-full px-3.5 py-2 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
               errors.password ? "border-red-300 focus:ring-red-500" : "border-gray-355"
             }`}
             placeholder="••••••••"
@@ -186,7 +186,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={isLoading || !!serverSuccess}
-          className="w-full bg-gray-900 text-white text-sm font-semibold py-2.5 px-4 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shadow-sm"
+          className="w-full bg-blue-600 text-white text-sm font-semibold py-2.5 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shadow-sm"
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-2">

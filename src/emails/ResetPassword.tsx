@@ -55,7 +55,7 @@ const cardStyle: React.CSSProperties = {
 };
 
 const logoStyle: React.CSSProperties = {
-  color: "#111827",
+  color: "#2563EB",
   fontSize: "22px",
   fontWeight: "bold",
   margin: "0 0 24px 0",
@@ -64,7 +64,7 @@ const logoStyle: React.CSSProperties = {
 };
 
 const titleStyle: React.CSSProperties = {
-  color: "#111827",
+  color: "#2563EB",
   fontSize: "20px",
   fontWeight: 600,
   margin: "0 0 16px 0",
@@ -83,7 +83,7 @@ const buttonContainerStyle: React.CSSProperties = {
 };
 
 const buttonStyle: React.CSSProperties = {
-  backgroundColor: "#111827",
+  backgroundColor: "#2563EB",
   borderRadius: "8px",
   color: "#FFFFFF",
   display: "inline-block",

@@ -31,7 +31,7 @@ export default async function VerifyEmailPage({ params }: VerifyEmailProps) {
     <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-sm p-8 text-center">
         {/* Brand Header */}
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gray-900 text-white font-bold text-xl mb-4 shadow-sm">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white font-bold text-xl mb-4 shadow-sm">
           SG
         </div>
         <h1 className="text-xl font-bold tracking-tight text-gray-900 mb-2">
@@ -53,7 +53,7 @@ export default async function VerifyEmailPage({ params }: VerifyEmailProps) {
             <div className="pt-4">
               <Link
                 href="/login"
-                className="inline-flex justify-center items-center w-full bg-gray-900 text-white text-sm font-semibold py-2.5 px-4 rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
+                className="inline-flex justify-center items-center w-full bg-blue-600 text-white text-sm font-semibold py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
               >
                 Go to Login
               </Link>

@@ -40,7 +40,7 @@ export default function DashboardPage() {
       <nav className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gray-900 text-white font-bold flex items-center justify-center text-sm">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center text-sm">
               SG
             </div>
             <span className="font-bold text-gray-900 text-base tracking-tight">
@@ -60,7 +60,7 @@ export default function DashboardPage() {
             </div>
             <button
               onClick={handleLogout}
-              className="bg-gray-900 text-white text-xs font-semibold py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors shadow-sm"
+              className="bg-blue-600 text-white text-xs font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
             >
               Sign Out
             </button>
