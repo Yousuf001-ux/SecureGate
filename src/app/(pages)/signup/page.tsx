@@ -119,7 +119,7 @@ export default function SignupPage() {
             type="text"
             disabled={isLoading || !!serverSuccess}
             {...register("name")}
-            className={`w-full px-3.5 py-2 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
+            className={`w-full px-3.5 py-2 border rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
               errors.name ? "border-red-300 focus:ring-red-500" : "border-gray-300"
             }`}
             placeholder="John Doe"
@@ -142,7 +142,7 @@ export default function SignupPage() {
             type="email"
             disabled={isLoading || !!serverSuccess}
             {...register("email")}
-            className={`w-full px-3.5 py-2 border rounded-lg text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
+            className={`w-full px-3.5 py-2 border rounded-lg text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400 transition-all ${
               errors.email ? "border-red-300 focus:ring-red-500" : "border-gray-300"
             }`}
             placeholder="you@example.com"
