@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SecureGate 🛡️
 
-## Getting Started
+SecureGate is a **hardened, production-grade authentication and security application** built with Next.js 14 App Router, TypeScript, NextAuth.js, and Prisma.
 
-First, run the development server:
+Every design, architectural, and coding choice is engineered through a defensive security lens to block common vulnerabilities like clickjacking, credential stuffing, enumeration, and token reuse.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🏗️ Layered Architecture
+
+SecureGate maintains a strict separation of concerns utilizing a layered server-first directory mapping:
+
+```
+src/
+├── app/                    # Next.js App Router (Pages & Endpoint Envelopes)
+│   ├── api/                # Route Handlers (strictly parses body & Zod validation)
+│   └── (pages)/            # Client & Server Page Views (signup, login, dashboard)
+├── server/
+│   ├── services/           # Business Logic (signup orchestration, token handling, emails)
+│   ├── repositories/       # Database Layer (strictly Prisma queries only)
+│   └── validators/         # Zod schemas (shared validation models)
+├── lib/                    # Core Singletons (hashing, prisma client, response structures)
+├── emails/                 # React Email transactional layouts
+└── components/             # Reusable accessible atomic UI blocks
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔒 Security Specifications
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+SecureGate enforces the following security standards:
 
-## Learn More
+1. **Hardened Hashing**: Strictly hashes passwords using `bcryptjs` with exactly **12 cost rounds** (`$2b$`).
+2. **256-bit Tokens**: Verification and reset tokens are generated using cryptographically secure random bytes (`crypto.randomBytes(32)`).
+3. **Instant Expiries**: Verification links expire in **15 minutes**; Reset links expire in **1 hour**.
+4. **Single-Use Tokens**: Every token is instantly consumed and deleted from the database upon first use to completely block replay attacks.
+5. **Anti-Enumeration Masking**: Failed credentials and non-existent accounts produce identical generic responses. Forgot-password always resolves with generic success.
+6. **Sliding-Window Rate Limiting**: NextAuth and Forgot-password endpoints limit IP requests to **5 attempts / 10 minutes** using Upstash Redis.
+7. **Severe HTTP Headers**: Site-wide Content Security Policy (CSP), Frame Options (DENY), HSTS, and nosniff rules are enforced.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ⚙️ Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Copy `.env.example` to `.env` or `.env.local` to start.
 
-## Deploy on Vercel
+| Variable | Description | Example |
+|---|---|---|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/securegate` |
+| `NEXTAUTH_URL` | Application root URL | `http://localhost:3000` |
+| `NEXTAUTH_SECRET` | 256-bit cryptographically secure string | `hP6N9R7kS2vT5wY8zA1bC4dE7fG0hJ3kM6nP9qR2` |
+| `RESEND_API_KEY` | Transactional email dispatch key | `re_1234567890` (Console falls back if missing) |
+| `UPSTASH_REDIS_REST_URL` | Rate limit storage endpoint | `https://upstash-example.upstash.io` |
+| `UPSTASH_REDIS_REST_TOKEN` | Rate limit token | `Ap_exampleToken` |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+> [!NOTE]
+> **Zero Resend Fallback**: If `RESEND_API_KEY` is not present, SecureGate runs in **Developer Console Mode** where email verification and password reset URLs are directly output to the Node console for instant local click-testing!
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🚀 Getting Started
+
+### 1. Install Dependencies
+```bash
+npm install
+```
+
+### 2. Configure Database & Migrations
+Create your database and compile the Prisma client:
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+### 3. Start Local Development
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view SecureGate.
