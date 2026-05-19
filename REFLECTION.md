@@ -22,7 +22,7 @@ The hardest part was getting Resend to work correctly, as it involves several st
 
 **Code reference:** `src/server/services/email.service.ts` lines 33-39
 
-**My Answer:** When SMTP credentials aren't configured (which they almost certainly aren't on a fresh clone or in CI), the email service silently falls back to logging the full verification or reset link to the console. This honors Murphy's Law by planning for the failure before it happens — instead of crashing with a connection refused error, the app keeps working so you can test the full auth flow locally without a real email server.
+**My Answer:** When SMTP credentials aren't configured, the email service silently falls back to logging the full verification or reset link to the console. This honors Murphy's Law by planning for the failure before it happens. Instead of crashing with a connection refused error, the app keeps working so you can test the full auth flow locally without a real email server.
 
 **What goes wrong if ignored:** If you don't handle the "no email credentials" case, the entire signup flow breaks on local dev. A new developer clones the repo, runs the app, tries to sign up, and gets a cryptic SMTP connection error with no way to proceed. They'd waste hours debugging email config when all they really wanted was to test the auth flow.
 
@@ -33,7 +33,7 @@ The hardest part was getting Resend to work correctly, as it involves several st
 
 **Code reference:** `src/server/services/user.service.ts` lines 12-13 (`normalizedEmail = email.toLowerCase().trim()`) called from `src/app/api/auth/signup/route.ts` line 26
 
-**My Answer:** Prisma's `findUnique` and `create` abstractions look clean and simple, but they leak the fact that PostgreSQL string comparison is case-sensitive by default. If you don't normalize the email to lowercase in the service layer before passing it to the repository, two users can sign up with "John@Example.com" and "john@example.com" — the unique constraint won't catch it because "John" and "john" are different bytes. The abstraction made me think the DB "just handles it," but the leak forces you to add explicit normalization at every entry point.
+**My Answer:** Prisma's `findUnique` and `create` abstractions look clean and simple, but they leak the fact that PostgreSQL string comparison is case-sensitive by default. If you don't normalize the email to lowercase in the service layer before passing it to the repository, two users can sign up with "John@Example.com" and "john@example.com" and the unique constraint won't catch it because "John" and "john" are different bytes. The abstraction made me think the DB "just handles it," but the leak forces you to add explicit normalization at every entry point.
 
 **What goes wrong if ignored:** Duplicate accounts silently pile up. You end up with three versions of the same person in your database, password resets go to the wrong address, and support tickets multiply. The root cause is invisible because at first glance everything seems to work.
 
@@ -46,7 +46,7 @@ The hardest part was getting Resend to work correctly, as it involves several st
 
 **My Answer:** The repository normalizes the email to lowercase right before every database query — `findUnique({ where: { email: email.toLowerCase() } })`. This is Postel's Law applied to authentication: be conservative in what you store (always lowercase, always trimmed) and liberal in what you accept from the user (let them type "John@Example.COM" or "JOHN@EXAMPLE.com" — it all works). The liberal acceptance happens seamlessly because the server handles the normalization, not the client.
 
-**What goes wrong if ignored:** A user signs up with "John.Doe@Example.com" and a month later tries to log in with "john.doe@example.com" — login fails. They assume the app is broken or their account was deleted. Support requests skyrocket over something that should never have been a problem in the first place.
+**What goes wrong if ignored:** A user signs up with "John.Doe@Example.com" and a month later tries to log in with "john.doe@example.com" login fails. They assume the app is broken or their account was deleted. Support requests skyrocket over something that should never have been a problem in the first place.
 
 ---
 
@@ -55,7 +55,7 @@ The hardest part was getting Resend to work correctly, as it involves several st
 
 **Code reference:** `src/server/auth/nextauth.ts` lines 40-50
 
-**My Answer:** The login flow throws the exact same `"Invalid credentials"` error whether the email doesn't exist or the password is wrong. This embodies Kerckhoffs's Principle — the system's security doesn't rely on an attacker not knowing which accounts exist. Even if someone steals the entire database and knows every email, they still can't log in without the password. The identical error message ensures that the mere existence of an account is never leaked through the authentication API.
+**My Answer:** The login flow throws the exact same `"Invalid credentials"` error whether the email doesn't exist or the password is wrong. This embodies Kerckhoffs's Principle. the system's security doesn't rely on an attacker not knowing which accounts exist. Even if someone steals the entire database and knows every email, they still can't log in without the password. The identical error message ensures that the mere existence of an account is never leaked through the authentication API.
 
 **What goes wrong if ignored:** An attacker iterates through 10,000 email addresses. For 9,800 of them, they get "no account found." For 200, they get "wrong password." Now they know exactly which 200 emails are valid users and can target them with phishing, social engineering, or credential stuffing. User enumeration is one of the most common reconnaissance techniques, and a two-line change prevents it entirely.
 
