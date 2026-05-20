@@ -9,220 +9,198 @@
 
 ## Part 1 — What I Built
 
-SecureGate is a hardened authentication web application built with Next.js 14 that handles the full user lifecycle — signup, email verification, login, password resets, and session management — all enforced server-side. The core features are a password-based credentials system with bcryptjs hashing (12 rounds), email verification via Nodemailer with a console fallback for local dev, sliding window rate limiting through Upstash Redis, and server-side middleware that blocks unauthenticated or unverified users from protected routes before any page content renders.
+SecureGate is a login and signup app that keeps user accounts safe. It lets people create accounts, verify their email, log in, and reset their password. It uses bcrypt to protect passwords, rate limiting to stop attackers, and server-side middleware to block unverified users from the dashboard.
 
 ## Part 2 — What Surprised Me
 
-The hardest part was getting Resend to work correctly, as it involves several steps from getting an api key to seting up the domain and verifing it, then to finally get it to send emails to the user's email address. It was taking too much time and i had to switch to Nodemailer to complete the assignment. But overall it was a great learning experience and i would definitely recommend it to others as it is a great way to learn about authentication and security.
+The hardest part was getting the middleware to work with NextAuth. When a user logs in, the session cookie does not get set right away. I had to learn how NextAuth creates and reads JWTs under the hood to make the middleware wait for the cookie before checking access.
 
 ## Part 3 — Engineering Laws Quiz
 
 ### Q1 — Murphy's Law
-*"Anything that can go wrong, will go wrong."*
+*"Anything that can go wrong will go wrong."*
 
-**Code reference:** `src/server/services/email.service.ts` lines 33-39
+**Code reference:** `src/server/services/rateLimit.service.ts` lines 11-14
 
-**My Answer:** When SMTP credentials aren't configured, the email service silently falls back to logging the full verification or reset link to the console. This honors Murphy's Law by planning for the failure before it happens. Instead of crashing with a connection refused error, the app keeps working so you can test the full auth flow locally without a real email server.
+**My Answer:** I added rate limiting so attackers cannot keep guessing passwords. I also made the email service print links to the terminal when email is not set up, so the app still works in development.
 
-**What goes wrong if ignored:** If you don't handle the "no email credentials" case, the entire signup flow breaks on local dev. A new developer clones the repo, runs the app, tries to sign up, and gets a cryptic SMTP connection error with no way to proceed. They'd waste hours debugging email config when all they really wanted was to test the auth flow.
+**What goes wrong if ignored:** Attackers try thousands of passwords or the app crashes for new developers with no email configured.
 
 ---
 
 ### Q2 — Law of Leaky Abstractions
 *"All non-trivial abstractions leak to some degree."*
 
-**Code reference:** `src/server/services/user.service.ts` lines 12-13 (`normalizedEmail = email.toLowerCase().trim()`) called from `src/app/api/auth/signup/route.ts` line 26
+**Code reference:** `src/server/repositories/user.repo.ts` lines 7-11
 
-**My Answer:** Prisma's `findUnique` and `create` abstractions look clean and simple, but they leak the fact that PostgreSQL string comparison is case-sensitive by default. If you don't normalize the email to lowercase in the service layer before passing it to the repository, two users can sign up with "John@Example.com" and "john@example.com" and the unique constraint won't catch it because "John" and "john" are different bytes. The abstraction made me think the DB "just handles it," but the leak forces you to add explicit normalization at every entry point.
+**My Answer:** Prisma hides that PostgreSQL treats "John@email.com" and "john@email.com" as different emails. I had to add .toLowerCase() to fix this.
 
-**What goes wrong if ignored:** Duplicate accounts silently pile up. You end up with three versions of the same person in your database, password resets go to the wrong address, and support tickets multiply. The root cause is invisible because at first glance everything seems to work.
+**What goes wrong if ignored:** Users create multiple accounts by accident just by typing their email in different capital letters.
 
 ---
 
-### Q3 — Postel's Law (Robustness Principle)
-*"Be conservative in what you send, be liberal in what you accept."*
+### Q3 — YAGNI
+*"You Aren't Gonna Need It."*
 
-**Code reference:** `src/server/repositories/user.repo.ts` lines 7-11
+**Code reference:** `src/server/auth/nextauth.ts` lines 7-91
 
-**My Answer:** The repository normalizes the email to lowercase right before every database query — `findUnique({ where: { email: email.toLowerCase() } })`. This is Postel's Law applied to authentication: be conservative in what you store (always lowercase, always trimmed) and liberal in what you accept from the user (let them type "John@Example.COM" or "JOHN@EXAMPLE.com" — it all works). The liberal acceptance happens seamlessly because the server handles the normalization, not the client.
+**My Answer:** Social login, MFA, and audit logs sound cool but I do not need them yet. I only built what the project asked for. I can add them later if someone asks.
 
-**What goes wrong if ignored:** A user signs up with "John.Doe@Example.com" and a month later tries to log in with "john.doe@example.com" login fails. They assume the app is broken or their account was deleted. Support requests skyrocket over something that should never have been a problem in the first place.
+**What goes wrong if ignored:** I waste time building features nobody asked for and my login might still have bugs.
 
 ---
 
 ### Q4 — Kerckhoffs's Principle
-*"A cryptosystem should be secure even if everything about the system is public, except the key."*
+*"Security must not rely on the secrecy of the algorithm."*
 
-**Code reference:** `src/server/auth/nextauth.ts` lines 40-50
+**Code reference:** `src/lib/bcrypt.ts` lines 1-8
 
-**My Answer:** The login flow throws the exact same `"Invalid credentials"` error whether the email doesn't exist or the password is wrong. This embodies Kerckhoffs's Principle. the system's security doesn't rely on an attacker not knowing which accounts exist. Even if someone steals the entire database and knows every email, they still can't log in without the password. The identical error message ensures that the mere existence of an account is never leaked through the authentication API.
+**My Answer:** A salt is random text added to your password before hashing so two users with the same password get different hashes. bcrypt does this by itself. SHA-256 is too fast and has no salt, so attackers can crack passwords quickly.
 
-**What goes wrong if ignored:** An attacker iterates through 10,000 email addresses. For 9,800 of them, they get "no account found." For 200, they get "wrong password." Now they know exactly which 200 emails are valid users and can target them with phishing, social engineering, or credential stuffing. User enumeration is one of the most common reconnaissance techniques, and a two-line change prevents it entirely.
-
----
-
-### Q5 — Principle of Least Privilege
-*"Every component should only have access to the information and resources necessary for its purpose."*
-
-**Code reference:** `src/server/repositories/token.repo.ts` lines 37-50
-
-**My Answer:** The token repository exposes only exactly what the service layer needs — `findVerificationTokenByToken` and `deleteVerificationToken`. There's no `updateVerificationToken`, no `findAllVerificationTokens`, no bulk delete by email. The repository doesn't even know why it's being called; it just handles the DB operation and returns. This prevents a well-meaning service function from accidentally modifying tokens in ways the architecture didn't intend, like updating an expiry date instead of properly expiring one.
-
-**What goes wrong if ignored:** If the repository exposed a generic `updateVerificationToken` method, some future developer might use it to "extend" a token's expiry instead of forcing a proper resend flow. That token now lives longer than intended. A token that should have died in 15 minutes survives for hours, widening the attack window.
+**What goes wrong if ignored:** If the database is stolen, attackers crack the passwords in hours instead of years.
 
 ---
 
-### Q6 — Defense in Depth
-*"Multiple layers of security ensure that if one fails, another catches the failure."*
+### Q5 — Postel's Law + Security by Design
+*"Be conservative in what you send."*
 
-**Code reference:** `src/middleware.ts` lines 14-26 (server-side middleware guard running before every `/dashboard` request)
+**Code reference:** `src/app/api/auth/forgot-password/route.ts` lines 37-38
 
-**My Answer:** The middleware checks for a valid session AND a non-null `emailVerified` field on every single request to `/dashboard`. But that's not the only layer — the `authorize` callback in NextAuth validates credentials, the `jwt` callback attaches `emailVerified` to the token, the `session` callback surfaces it to the client, and the rate limiter adds a separate throttling layer in front of login. If the JWT secret gets compromised, an attacker still hasn't bypassed rate limiting. If rate limiting has a bug, the JWT still needs to be valid. Each layer independently enforces security.
+**My Answer:** The forgot-password endpoint always says "email sent" even if the email does not exist. This stops attackers from finding out which emails are registered.
 
-**What goes wrong if ignored:** With only a client-side check, a user can open DevTools, set `isLoggedIn: true` in localStorage, and see the dashboard UI. Sure, there's no data to see, but the fact that they reached that URL at all tells them the route exists, the app structure, and potentially the API endpoints the dashboard calls. Leaked surface area is still a breach.
-
----
-
-### Q7 — Pareto Principle (80/20 Rule)
-*"Roughly 80% of effects come from 20% of causes."*
-
-**Code reference:** `src/lib/bcrypt.ts` lines 1-5
-
-**My Answer:** Setting bcrypt salt rounds to exactly 12 is the 20% effort that prevents 80% of password-cracking scenarios. Each round doubles the computation time — 12 rounds gives you about 200-300ms per hash on modern hardware. Going from 0 to 12 rounds eliminates most GPU-based brute-force attacks. Going from 12 to 13 would double your server's auth compute cost for a marginal security gain. The 80/20 insight is that 12 rounds is the sweet spot where you get the vast majority of the security benefit with none of the user-facing slowdown.
-
-**What goes wrong if ignored:** At 8 rounds, the hash completes in ~10ms. An attacker with a modern GPU can try 500+ passwords per second per hash. At 15 rounds, the hash takes ~2 seconds. Your users start tweeting "why is login so slow??" and bouncing. Either way, you lose. Twelve rounds is the compromise that keeps both security teams and users happy.
+**What goes wrong if ignored:** Attackers find all valid emails and send phishing attacks to those users.
 
 ---
 
-### Q8 — Fail-Safe Defaults
-*"The default state should be denial of access."*
+### Q6 — The Boy Scout Rule
+*"Leave the code better than you found it."*
 
-**Code reference:** `src/server/services/token.service.ts` lines 47-49
+**Code reference:** `src/app/api/auth/resend-verification/route.ts` line 2
 
-**My Answer:** The `validateAndConsumeVerificationToken` function deletes the verification token BEFORE returning the associated email and marking the user as verified. If the server crashes between the delete and the user update — or if an error is thrown — the token is already gone. This is fail-safe: losing a token because of a crash is annoying, but letting a token survive forever because of a crash is a security vulnerability. The default state for any token should be "consumed."
+**My Answer:** The resend-verification file was importing a schema called "forgotPasswordSchema" which was confusing. I renamed it so the code makes sense.
 
-**What goes wrong if ignored:** If the token is deleted AFTER the user is verified (or not deleted at all), a server error during the "mark as verified" step leaves a valid, unexpired token in the database. An attacker who intercepted the verification link can re-use it even though the user already verified. They get their email verified on someone else's account. With a verification token, that's your entire auth chain compromised.
-
----
-
-### Q9 — Principle of Complete Mediation
-*"Every access to every resource must be checked for authorization."*
-
-**Code reference:** `src/server/repositories/user.repo.ts` lines 7-43 (every single method normalizes email with `.toLowerCase()` independently)
-
-**My Answer:** Every repository method normalizes the email to lowercase before querying — not just `findUserByEmail`, but also `createUser`, `markEmailVerified`, and `updateUserPassword`. This is Complete Mediation applied to data access: no matter which code path reaches the database — signup, login, verification, password reset — the normalization check happens at the gate. You don't assume a higher layer already handled it, because a new route handler or service might skip that normalization step in the future.
-
-**What goes wrong if ignored:** A new developer adds a `deleteAccount` endpoint and calls `userRepo.findUserByEmail("John@Example.com")` directly without normalizing first. The query returns null because the DB stores "john@example.com". The user gets a "account not found" error and can't delete their own account. The user-facing experience breaks, and the root cause traces back to an implicit assumption that upstream code already did the normalization.
+**What goes wrong if ignored:** Developers copy the wrong import because the name is misleading.
 
 ---
 
-### Q10 — Weakest Link Principle
-*"The security of a system is only as strong as its weakest component."*
+### Q7 — Gall's Law
+*"A complex system that works evolved from a simple system that worked."*
 
-**Code reference:** `src/server/services/token.service.ts` line 8 (`crypto.randomBytes(32).toString("hex")`)
+**Code reference:** `src/middleware.ts` lines 9-54
 
-**My Answer:** Everything else in the auth chain — bcrypt hashing, rate limiting, middleware guards — gets undermined if the token generation itself is predictable. A sequential ID or timestamp-based token means an attacker who guesses one valid token can trivially guess the next. Using `crypto.randomBytes(32)` (256 bits of entropy from the OS CSPRNG) ensures that token generation is never the weakest link. Even if an attacker knows the exact algorithm and the exact timestamp, they still can't predict the output.
+**My Answer:** I built one feature at a time. First signup, then login, then middleware, then password reset. Each step worked before I added the next one.
 
-**What goes wrong if ignored:** Using `Math.random()` or a sequential counter for tokens means an attacker can enumerate valid tokens. They sign up, get token 52, then write a script to try tokens 50-100 against the verify-email endpoint. Token 53 might belong to another user. That user's account gets verified without their consent — worse, by an attacker who now controls a verified account under someone else's email.
-
----
-
-### Q11 — Least Common Mechanism
-*"Minimize the amount of shared mechanisms between users to prevent information leaks."*
-
-**Code reference:** `src/app/api/auth/signup/route.ts` lines 34-48
-
-**My Answer:** The signup route handler catches the `"REGISTRATION_FAILED"` error and returns a generic "An account with these details could not be created" message. It doesn't return the Prisma error, the stack trace, or even a distinction between "duplicate email" vs "internal error." This is Least Common Mechanism at work — the same error envelope is used for every failure, so an attacker can't distinguish between different failure modes by observing different outputs. All error paths converge on the same shared mechanism: a generic JSON envelope.
-
-**What goes wrong if ignored:** Returning Prisma's `Unique constraint failed on User.email` gives an attacker a clear signal: the email exists. Now they know that "john@example.com" is a registered user. Combined with the login endpoint's identical error message, they've bypassed one of your security layers just by reading your error response.
+**What goes wrong if ignored:** I build everything at once, it breaks, and I have no idea where the bug is.
 
 ---
 
-### Q12 — Separation of Duty
-*"No single component should be able to execute a critical operation alone."*
+### Q8 — Law of Leaky Abstractions (ORMs)
+*"All non-trivial abstractions leak."*
 
-**Code reference:** `src/server/services/user.service.ts` lines 95-106 (`resetPassword` calls token validation, then password update, then token deletion in sequence)
+**Code reference:** `prisma/schema.prisma` lines 19-33
 
-**My Answer:** A password reset requires three separate actors — the token service validates the token, the user service hashes the new password, and the token repo deletes the old token. No single function can do all three. This prevents scenarios like a bug in the user service accidentally deleting verification tokens without actually changing the password, or a compromised repository function changing a password without first validating a reset token. Each responsibility is owned by a different layer.
+**My Answer:** The VerificationToken table uses two columns as its ID, not a single ID column. Prisma hides this from you.
 
-**What goes wrong if ignored:** If the token validation and password update were in the same function with no separation, a developer could accidentally skip the token check while refactoring. The function would still compile and "work," but now anyone who knows the email can reset the password without any token at all. Separation of duty turns a one-line mistake into a compilation error or a test failure.
-
----
-
-### Q13 — Secure by Default
-*"The system should be secure in its default configuration."*
-
-**Code reference:** `next.config.mjs` lines 24-26 (`Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`)
-
-**My Answer:** The HSTS header with `preload` tells browsers to ONLY connect to the site over HTTPS — forever — even before the user's first visit (if the domain is on the preload list). This is Secure by Default because the decision to use HTTPS is made at the framework level, not left to individual page implementations. There's no opt-in required per route. The browser enforces it before any HTTP request completes, so a man-in-the-middle on the same Wi-Fi network can't even attempt an SSL strip attack — the browser won't let the HTTP request through.
-
-**What goes wrong if ignored:** Without HSTS, the first HTTP request an unvisited user makes to your site travels in plaintext. An attacker on the same coffee shop Wi-Fi intercepts it, responds with a fake page, and the user types their credentials into a phishing clone. HSTS prevents the attack from ever starting — the browser upgrades to HTTPS before the request leaves.
+**What goes wrong if ignored:** Someone writes a raw SQL query that fails because they did not know about the composite key.
 
 ---
 
-### Q14 — Psychological Acceptability
-*"Security mechanisms should not make the system difficult to use."*
+### Q9 — Zawinski's Law
+*"Every program attempts to expand until it can read mail."*
 
-**Code reference:** `src/server/services/rateLimit.service.ts` lines 11-14 (`Ratelimit.slidingWindow(5, "10 m")`)
+**Code reference:** `src/server/services/rateLimit.service.ts` lines 1-47
 
-**My Answer:** Five attempts per ten minutes per IP with a sliding window is strict enough to block brute-force attacks but lenient enough that a genuine user who mistypes their password four times isn't locked out of their account for an hour. The sliding window (rather than a fixed reset at the top of the hour) also means a user who waits a few minutes can try again — they're not punished by arbitrary clock boundaries. The rate limit is psychologically acceptable because it doesn't make users feel like they're being treated as attackers for making an honest mistake.
+**My Answer:** I had to add rate limiting because NextAuth does not include it. Zawinski's Law says apps try to do everything over time. You must stay focused on what the app is for.
 
-**What goes wrong if ignored:** A rate limit of 3 attempts per hour means a user who forgets their password triggers the lockout in seconds. They're stuck, frustrated, and probably blame the app, not their own memory. A rate limit of 100 attempts per minute is so permissive it's useless — a brute-force script burns through thousands of password guesses before the first human even wakes up. Getting this wrong in either direction creates either unusable UX or no security at all.
+**What goes wrong if ignored:** The app keeps growing with random features until it is slow and messy.
 
 ---
 
-### Q15 — Chesterton's Fence
-*"Don't remove a fence until you know why it was put there."*
+### Q10 — Principle of Least Surprise
+*"Software should behave in the way users expect."*
 
-**Code reference:** `src/app/api/auth/forgot-password/route.ts` lines 37-38 (always returns identical success message)
+**Code reference:** `src/app/(pages)/login/page.tsx` lines 41-45
 
-**My Answer:** The fence here is the "always return success" pattern for forgot-password — the endpoint sends back `"If an account exists for this email, a reset link has been sent."` even when no account exists. A developer unfamiliar with security might look at this and think "that's a bug, it should tell the user if their email isn't registered." But the fence exists to prevent user enumeration. Knowing why it's there before removing it is critical — "fixing" this "bug" by returning different messages for found vs not-found accounts would create a security vulnerability that directly leaks your user database.
+**My Answer:** The login form shows "Invalid email or password" for both wrong email and wrong password. Users expect a simple message, not a detailed breakdown of what they got wrong.
 
-**What goes wrong if ignored:** A product manager says "users are confused, let's tell them if their email exists or not." Someone removes the fence without understanding it. The forgot-password endpoint now returns "email found — check your inbox" vs "email not found." An attacker runs a quick script against this endpoint and within minutes has a complete list of every registered email address. That list is now sold, phished, or credential-stuffed. All because a "confusing" response message was "fixed" without understanding what it protected.
+**What goes wrong if ignored:** Telling users "email not found" lets attackers know which emails are real.
+
+---
+
+### Q11 — Murphy's Law + Defensive Programming
+*"Assume the worst-case user."*
+
+**Code reference:** `src/middleware.ts` lines 9-54
+
+**My Answer:** The middleware reads the JWT from the cookie. If a user deletes their cookie, the middleware sends them straight to /login before the dashboard loads.
+
+**What goes wrong if ignored:** Users see a flash of the dashboard before the login check runs.
+
+---
+
+### Q12 — Kerckhoffs's Principle + Technical Debt
+*"Security debt has compounding interest."*
+
+**Code reference:** `src/server/auth/nextauth.ts` line 90
+
+**My Answer:** If NEXTAUTH_SECRET gets pushed to GitHub, anyone can create fake login cookies and access protected pages. You fix it by generating a new secret and deploying it. Old commits still have the secret in the history.
+
+**What goes wrong if ignored:** Attackers keep accessing accounts even after you think the problem is fixed.
+
+---
+
+### Q13 — Conway's Law
+*"Systems mirror the communication structure of the people who build them."*
+
+**Code reference:** The folder structure: `src/app/api/` -> `src/server/services/` -> `src/server/repositories/`
+
+**My Answer:** My folder structure shows how I think. Routes handle requests, services run the logic, and repositories talk to the database. Each folder has one job.
+
+**What goes wrong if ignored:** Without clear folders, code gets thrown anywhere and becomes hard to find.
+
+---
+
+### Q14 — Technical Debt
+*"Everything that slows you down later because of a shortcut taken now."*
+
+**Code reference:** `src/server/services/rateLimit.service.ts` lines 35-46
+
+**My Answer:** The rate limiter lets all requests through when Redis is down. I left it this way so the app works without Redis during development. The fix is to block requests when Redis fails.
+
+**What goes wrong if ignored:** If Redis goes down in production, attackers can guess passwords with no limits.
+
+---
+
+### Q15 — Synthesis
+*"All principles apply."*
+
+**Answer:** Every principle still applies when adding payments. Murphy's Law matters most because payments fail, webhooks time out, and charges duplicate. Fail-Safe Defaults means never giving access until payment is confirmed by the server. Never trust what the browser tells you.
 
 ---
 
 ## Part 4 — One Thing I Would Refactor
 
-The rate limiter defaults to **fail-open** — if Redis is down or unconfigured, it logs a warning and returns `true` (allow). For a security-first app, this should default to **fail-closed** (block until the admin intervenes). A production outage is better than an open door during a Redis failure.
+The rate limiter lets all requests through when Redis is down. I would change it to block requests when Redis is down, because letting unlimited logins through is worse than a temporary outage.
 
-**Refactored version of** `src/server/services/rateLimit.service.ts`:
+Refactored code in `src/server/services/rateLimit.service.ts`:
 
 ```typescript
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL || "",
-  token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
-});
-
-export const rateLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, "10 m"),
-  analytics: false,
-  prefix: "@upstash/ratelimit/securegate",
-});
-
 export async function checkRateLimit(ip: string, action: string): Promise<boolean> {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    console.error("[RateLimit] Redis not configured. Denying all requests until configured.");
+    console.error("[RateLimit] Redis not configured. Denying all requests.");
     return false;
   }
-
   try {
     const identifier = `${action}:${ip}`;
     const { success } = await rateLimiter.limit(identifier);
     return success;
   } catch (error) {
-    console.error(`[RateLimit] Redis error — denying request to prevent security gap.`, error);
+    console.error("[RateLimit] Redis error. Denying request.", error);
     return false;
   }
 }
 ```
 
-This swaps fail-open for fail-closed. In production, if Redis is down, login attempts are blocked until Redis recovers — which is annoying, but it's far better than allowing unlimited login attempts against your database. The tradeoff is intentional and documented.
-
 ## Part 5 — How This Changes How I Build
 
-Before this project, I treated authentication as a checkbox feature — slap on NextAuth, add a middleware template from a blog post, and call it done. I now see it differently. Every single decision, from error messages to token deletion order, creates either a hardening or a vulnerability. I'll never look at a "password cannot be empty" validation the same way again. More broadly, I learned that engineering laws like Postel's Principle and Kerckhoffs's Principle aren't abstract theory — they're practical tools you can apply line-by-line. When I'm unsure about a design choice, I now ask "what law or principle does this violate?" instead of "does this feel right?" That shift alone is worth more than any specific auth implementation detail.
+Before this project, I thought auth was just adding a library and moving on. Now I know that every small decision, from error messages to token expiry, matters for security. I also learned to ask "what principle does this break?" instead of just guessing if something is right.
