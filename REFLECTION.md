@@ -49,7 +49,7 @@ The hardest part was getting the middleware to work with NextAuth. When a user l
 **What goes wrong if ignored:** I waste time building features nobody asked for and my login might still have bugs.
 
 ---
-
+ 
 ### Q4 — Kerckhoffs's Principle
 *"Security must not rely on the secrecy of the algorithm."*
 

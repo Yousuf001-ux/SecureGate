@@ -13,6 +13,7 @@ interface PasswordInputProps {
   placeholder?: string;
   showStrengthIndicator?: boolean;
   watchedPassword?: string;
+  labelAction?: React.ReactNode;
 }
 
 export function PasswordInput({
@@ -24,14 +25,20 @@ export function PasswordInput({
   placeholder = "••••••••",
   showStrengthIndicator = false,
   watchedPassword,
+  labelAction,
 }: PasswordInputProps): JSX.Element {
   const [visible, setVisible] = useState(false);
 
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="block text-sm font-semibold text-gray-700">
-        {label}
-      </label>
+      <div className="flex items-center justify-between">
+        <label htmlFor={id} className="block text-sm font-semibold text-gray-700">
+          {label}
+        </label>
+        {labelAction && (
+          <div className="text-xs">{labelAction}</div>
+        )}
+      </div>
       <div className="relative">
         <input
           id={id}

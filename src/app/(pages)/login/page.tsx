@@ -58,26 +58,17 @@ export default function LoginPage() {
 
   return (
     <AuthFormWrapper
-      title="Sign in to your account"
-      subtitle="Enter your credentials to cross the security barrier."
+      title="Log in to your account"
+      subtitle="Enter your credentials to continue"
       footer={
         <div className="space-y-2">
           <p className="text-sm text-gray-500">
             Don&apos;t have an account?{" "}
             <Link
               href="/signup"
-              className="font-medium text-gray-900 underline hover:text-gray-700 transition-colors"
+              className="font-medium text-gray-900 hover:text-gray-700 transition-colors"
             >
               Sign up
-            </Link>
-          </p>
-          <p className="text-xs text-gray-400">
-            Forgot your credentials?{" "}
-            <Link
-              href="/forgot-password"
-              className="font-semibold text-gray-800 hover:text-gray-600 transition-colors"
-            >
-              Reset password
             </Link>
           </p>
         </div>
@@ -134,6 +125,14 @@ export default function LoginPage() {
           registration={register("password")}
           error={errors.password}
           disabled={isLoading}
+          labelAction={
+            <Link
+              href="/forgot-password"
+              className="font-semibold text-gray-800 hover:text-gray-600 transition-colors"
+            >
+              Forgot password?
+            </Link>
+          }
         />
 
         {/* Submit Button */}
@@ -151,7 +150,7 @@ export default function LoginPage() {
               Verifying Credentials...
             </span>
           ) : (
-            "Sign In"
+            "Log In"
           )}
         </button>
       </form>

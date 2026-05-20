@@ -44,7 +44,7 @@ export default function DashboardPage() {
               SG
             </div>
             <span className="font-bold text-gray-900 text-base tracking-tight">
-              SecureGate Control
+              SecureGate
             </span>
           </div>
 

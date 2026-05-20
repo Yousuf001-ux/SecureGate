@@ -78,9 +78,9 @@ export default function ResetPasswordPage({ params }: ResetPasswordProps) {
           Cancel and return to{" "}
           <Link
             href="/login"
-            className="font-medium text-gray-900 underline hover:text-gray-700 transition-colors"
+            className="font-medium text-gray-900 hover:text-gray-700 transition-colors"
           >
-            Sign in
+            Log in
           </Link>
         </p>
       }
